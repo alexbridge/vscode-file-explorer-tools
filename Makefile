@@ -1,27 +1,35 @@
-NAME := file-explorer-tools
+NAME := $(shell node -p "require('./package.json').name")
 VERSION := $(shell node -p "require('./package.json').version")
 VSIX := $(NAME)-$(VERSION).vsix
 
-.PHONY: install build watch lint pack clean install-ext
+# Open-VSX token: read from ~/.config/env
+OPEN_VSX_TOKEN := $(shell grep OPEN_VSX_TOKEN ~/.config/env | cut -d '=' -f 2)
 
-install:
+.PHONY: build lint format pack clean install-ext publish
+
+init:
 	npm install
+	cd tools/mcp-scopes && npm install
 
-build: install
-	npm run build
+build:
+	npm run build:production
 
-watch: install
-	npm run watch
-
-lint: install
+lint:
 	npm run lint
 
-pack: build
-	npx @vscode/vsce package --no-dependencies -o $(VSIX)
-	@echo "Packaged: $(VSIX)"
+format:
+	npm run format
+
+pack: format lint
+	npm run package
 
 install-ext: pack
 	code --install-extension $(VSIX)
+
+publish: pack
+	@echo "Ready to publish $(NAME) version $(VERSION) to Open VSX."
+	@echo -n "Proceed? [y/N] " && read ans && [ "$$ans" = "y" ]
+	npx ovsx publish --pat $(OPEN_VSX_TOKEN)
 
 clean:
 	rm -rf dist node_modules *.vsix

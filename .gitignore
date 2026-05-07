@@ -1,8 +1,5 @@
-/.vscode
-/.vscodeignore
-/CLAUDE.md
-/dist
-/esbuild.js
-/file-explorer-tools-0.1.0.vsix
-/media
-/node_modules
+.claude
+.vscode
+dist
+node_modules
+*.vsix

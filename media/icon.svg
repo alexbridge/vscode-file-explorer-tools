@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background rounded square -->
+  <rect x="4" y="4" width="120" height="120" rx="16" ry="16" fill="#1e1e1e"/>
+
+  <!-- Folder body -->
+  <path d="M22 38 L22 96 Q22 100 26 100 L102 100 Q106 100 106 96 L106 48 Q106 44 102 44 L60 44 L52 34 Q50 32 48 32 L26 32 Q22 32 22 36 Z" fill="#2d2d2d" stroke="#3c3c3c" stroke-width="1.5"/>
+
+  <!-- Folder tab -->
+  <path d="M22 36 Q22 32 26 32 L48 32 Q50 32 52 34 L60 44 L22 44 Z" fill="#383838" stroke="#3c3c3c" stroke-width="1.5"/>
+
+  <!-- Colored scope dots -->
+  <!-- Red -->
+  <circle cx="40" cy="72" r="9" fill="#e45649"/>
+  <!-- Blue -->
+  <circle cx="64" cy="72" r="9" fill="#4aa5f0"/>
+  <!-- Green -->
+  <circle cx="88" cy="72" r="9" fill="#50a14f"/>
+
+  <!-- Small expand arrows below dots to hint at "explorer tools" -->
+  <path d="M40 88 L36 92 L44 92 Z" fill="#6c6c6c"/>
+  <path d="M64 88 L60 92 L68 92 Z" fill="#6c6c6c"/>
+  <path d="M88 88 L84 92 L92 92 Z" fill="#6c6c6c"/>
+</svg>

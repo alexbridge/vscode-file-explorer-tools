@@ -1,8 +1,8 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import { ScopeDefinition, SharedScopesFile } from "./types";
-import { CONFIG_KEY, LOCAL_SCOPES_KEY, SHARED_SCOPES_FILENAME } from "./constants";
-import { clearMatcherCache } from "./utils";
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { ScopeDefinition, SharedScopesFile } from './types';
+import { CONFIG_KEY, LOCAL_SCOPES_KEY, SHARED_SCOPES_FILENAME } from './constants';
+import { clearMatcherCache } from './utils';
 
 export class ScopeManager implements vscode.Disposable {
   private scopes = new Map<string, ScopeDefinition>();
@@ -24,11 +24,15 @@ export class ScopeManager implements vscode.Disposable {
       this.disposables.push(watcher);
     }
 
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration(CONFIG_KEY)) {
-        this.reload();
-      }
-    }, undefined, this.disposables);
+    vscode.workspace.onDidChangeConfiguration(
+      (e) => {
+        if (e.affectsConfiguration(`${CONFIG_KEY}.${LOCAL_SCOPES_KEY}`)) {
+          this.reload();
+        }
+      },
+      undefined,
+      this.disposables
+    );
   }
 
   private reload(): void {
@@ -48,14 +52,14 @@ export class ScopeManager implements vscode.Disposable {
     if (!folder) {
       return;
     }
-    const filePath = path.join(folder.uri.fsPath, ".vscode", SHARED_SCOPES_FILENAME);
+    const filePath = path.join(folder.uri.fsPath, '.vscode', SHARED_SCOPES_FILENAME);
     try {
-      const fs = require("fs");
-      const content = fs.readFileSync(filePath, "utf-8");
+      const fs = require('fs');
+      const content = fs.readFileSync(filePath, 'utf-8');
       const data: SharedScopesFile = JSON.parse(content);
       if (Array.isArray(data.scopes)) {
         for (const s of data.scopes) {
-          this.scopes.set(s.id, { ...s, storage: "shared" });
+          this.scopes.set(s.id, { ...s, storage: 'shared' });
         }
       }
     } catch {
@@ -65,9 +69,9 @@ export class ScopeManager implements vscode.Disposable {
 
   private loadLocalScopes(): void {
     const config = vscode.workspace.getConfiguration(CONFIG_KEY);
-    const localScopes = config.get<Omit<ScopeDefinition, "storage">[]>(LOCAL_SCOPES_KEY, []);
+    const localScopes = config.get<Omit<ScopeDefinition, 'storage'>[]>(LOCAL_SCOPES_KEY, []);
     for (const s of localScopes) {
-      this.scopes.set(s.id, { ...s, storage: "local" });
+      this.scopes.set(s.id, { ...s, storage: 'local' });
     }
   }
 
@@ -111,7 +115,6 @@ export class ScopeManager implements vscode.Disposable {
     if (!scope) {
       return;
     }
-    scope.color = colorId;
     await this.persist(scope.storage);
     this._onDidChangeScopes.fire();
   }
@@ -121,12 +124,37 @@ export class ScopeManager implements vscode.Disposable {
     if (!scope) {
       return;
     }
-    if (!scope.patterns.includes(pattern)) {
-      scope.patterns.push(pattern);
-      clearMatcherCache();
-      await this.persist(scope.storage);
-      this._onDidChangeScopes.fire();
+
+    // 1. If we already have a pattern that covers this new one, do nothing
+    const isAlreadyCovered = scope.patterns.some((p) => {
+      if (p === pattern) {
+        return true;
+      }
+      if (p.endsWith('/**')) {
+        const base = p.slice(0, -3);
+        return pattern.startsWith(base + '/') || pattern === base;
+      }
+      return false;
+    });
+
+    if (isAlreadyCovered) {
+      return;
     }
+
+    // 2. If the new pattern covers existing patterns, remove the redundant ones
+    if (pattern.endsWith('/**')) {
+      const base = pattern.slice(0, -3);
+      scope.patterns = scope.patterns.filter((p) => {
+        // Keep if it's NOT a subpath of the new recursive pattern
+        const isSubpath = p.startsWith(base + '/') || p === base;
+        return !isSubpath;
+      });
+    }
+
+    scope.patterns.push(pattern);
+    clearMatcherCache();
+    await this.persist(scope.storage);
+    this._onDidChangeScopes.fire();
   }
 
   async removeFromScope(id: string, pattern: string): Promise<void> {
@@ -155,14 +183,14 @@ export class ScopeManager implements vscode.Disposable {
   }
 
   getScopesForFile(relativePath: string): ScopeDefinition[] {
-    const { fileMatchesPattern } = require("./utils");
+    const { fileMatchesPattern } = require('./utils');
     return this.getAllScopes().filter((scope) =>
       scope.patterns.some((pattern) => fileMatchesPattern(relativePath, pattern))
     );
   }
 
-  private async persist(storage: "local" | "shared"): Promise<void> {
-    if (storage === "shared") {
+  private async persist(storage: 'local' | 'shared'): Promise<void> {
+    if (storage === 'shared') {
       await this.persistShared();
     } else {
       await this.persistLocal();
@@ -175,11 +203,11 @@ export class ScopeManager implements vscode.Disposable {
       return;
     }
     const sharedScopes = this.getAllScopes()
-      .filter((s) => s.storage === "shared")
+      .filter((s) => s.storage === 'shared')
       .map(({ storage: _, ...rest }) => rest);
 
     const data: SharedScopesFile = { scopes: sharedScopes };
-    const dirUri = vscode.Uri.joinPath(folder.uri, ".vscode");
+    const dirUri = vscode.Uri.joinPath(folder.uri, '.vscode');
     const fileUri = vscode.Uri.joinPath(dirUri, SHARED_SCOPES_FILENAME);
 
     try {
@@ -188,13 +216,13 @@ export class ScopeManager implements vscode.Disposable {
       await vscode.workspace.fs.createDirectory(dirUri);
     }
 
-    const content = Buffer.from(JSON.stringify(data, null, 2) + "\n", "utf-8");
+    const content = Buffer.from(JSON.stringify(data, null, 2) + '\n', 'utf-8');
     await vscode.workspace.fs.writeFile(fileUri, content);
   }
 
   private async persistLocal(): Promise<void> {
     const localScopes = this.getAllScopes()
-      .filter((s) => s.storage === "local")
+      .filter((s) => s.storage === 'local')
       .map(({ storage: _, ...rest }) => rest);
 
     const config = vscode.workspace.getConfiguration(CONFIG_KEY);

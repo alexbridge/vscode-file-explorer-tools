@@ -1,0 +1,17 @@
+.claude/
+node_modules/
+src/
+*.ts
+tools/**/node_modules/
+tools/**/package*.json
+tools/**/*.src.js
+tsconfig.json
+esbuild.js
+Makefile
+.gitignore
+.nvmrc
+*.vsix
+**/*.map
+.mcp.json
+.apixs
+.vscode

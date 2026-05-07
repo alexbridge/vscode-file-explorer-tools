@@ -1,9 +1,13 @@
-import * as vscode from "vscode";
-import { ScopeManager } from "./scope-manager";
-import { uriToRelativePath, getThemeColor, fileMatchesPattern } from "./utils";
+import * as vscode from 'vscode';
+import { ScopeManager } from './scope-manager';
+import { uriToRelativePath, fileMatchesPattern } from './utils';
 
-export class ScopeFileDecorationProvider implements vscode.FileDecorationProvider, vscode.Disposable {
-  private readonly _onDidChangeFileDecorations = new vscode.EventEmitter<vscode.Uri | vscode.Uri[] | undefined>();
+export class ScopeFileDecorationProvider
+  implements vscode.FileDecorationProvider, vscode.Disposable
+{
+  private readonly _onDidChangeFileDecorations = new vscode.EventEmitter<
+    vscode.Uri | vscode.Uri[] | undefined
+  >();
   readonly onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
 
   private disposable: vscode.Disposable;
@@ -24,11 +28,11 @@ export class ScopeFileDecorationProvider implements vscode.FileDecorationProvide
     for (const scope of scopes) {
       for (const pattern of scope.patterns) {
         if (fileMatchesPattern(rel, pattern)) {
-          const color = getThemeColor(scope.color);
+          // Removed color logic
           return {
             badge: scope.name.slice(0, 2).toUpperCase(),
             tooltip: `Scope: ${scope.name}`,
-            color,
+            // color, // Removed
           };
         }
       }
