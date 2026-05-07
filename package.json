@@ -2,7 +2,7 @@
   "name": "file-explorer-tools",
   "displayName": "File Explorer Tools",
   "description": "File Explorer enhancement for VSCode: Scopes Manager, Recursive Expand, Rename cascade",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "abridge",
   "author": "alexbridge",
   "repository": {
@@ -19,10 +19,13 @@
     "vscode",
     "expander",
     "scopes",
+    "project scopes",
+    "scopes manager",
     "explorer",
-    "vscode-extension",
-    "rename-files",
-    "rename-cascade"
+    "rename files",
+    "rename cascade",
+    "angular rename",
+    "workspace"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -118,6 +121,11 @@
         "title": "Copy Scope Name",
         "category": "Scopes Manager",
         "icon": "$(copy)"
+      },
+      {
+        "command": "scopesManager.switchScope",
+        "title": "Switch Scope",
+        "category": "Scopes Manager"
       }
     ],
     "menus": {
@@ -188,11 +196,6 @@
           "group": "scopeActions@2"
         },
         {
-          "command": "scopesManager.editScopeColor",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "scopeActions@3"
-        },
-        {
           "command": "scopesManager.clearScope",
           "when": "view == scopesListView && viewItem == scope",
           "group": "scopeActions@4"
@@ -209,6 +212,11 @@
         "command": "scopesManager.removeFromScope",
         "key": "alt+d",
         "when": "explorerViewletVisible && (filesExplorerFocus || editorFocus)"
+      },
+      {
+        "command": "scopesManager.switchScope",
+        "key": "shift+alt+s",
+        "when": "explorerViewletVisible"
       }
     ],
     "configuration": {

@@ -297,6 +297,42 @@ export function registerScopeCommands(
     )
   );
 
+  // Switch Scope (keyboard-driven picker)
+  disposables.push(
+    vscode.commands.registerCommand('scopesManager.switchScope', async () => {
+      const scopes = manager.getAllScopes();
+      const activeId = treeProvider.getActiveScopeId();
+
+      type Item = vscode.QuickPickItem & { scopeId?: string | null };
+      const items: Item[] = [
+        {
+          label: `${!activeId ? '$(check) ' : ''}Project`,
+          description: 'No active scope',
+          scopeId: null,
+        },
+        { label: 'Scopes', kind: vscode.QuickPickItemKind.Separator },
+        ...scopes.map<Item>((s) => ({
+          label: `${s.id === activeId ? '$(check) ' : ''}${s.name}`,
+          description: `${s.storage} - ${s.patterns.length} pattern(s)`,
+          scopeId: s.id,
+        })),
+      ];
+
+      const picked = await vscode.window.showQuickPick(items, {
+        placeHolder: 'Switch active scope',
+      });
+      if (!picked || picked.scopeId === undefined) {
+        return;
+      }
+
+      if (picked.scopeId === null) {
+        await vscode.commands.executeCommand('scopesManager.deselectScope');
+      } else {
+        await vscode.commands.executeCommand('scopesManager.selectScope', picked.scopeId);
+      }
+    })
+  );
+
   // Expand Scope
   disposables.push(
     vscode.commands.registerCommand('scopesManager.expandScope', async (scopeId?: string) => {
@@ -340,13 +376,10 @@ async function createScopeFlow(manager: ScopeManager): Promise<string | undefine
     return undefined;
   }
 
-  // Removed color picking logic
-
   const scope: ScopeDefinition = {
     id: generateId(),
     name: name.trim(),
     storage: 'local',
-    // color: colorId, // Removed
     patterns: [],
   };
 

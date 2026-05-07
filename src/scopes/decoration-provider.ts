@@ -28,11 +28,9 @@ export class ScopeFileDecorationProvider
     for (const scope of scopes) {
       for (const pattern of scope.patterns) {
         if (fileMatchesPattern(rel, pattern)) {
-          // Removed color logic
           return {
             badge: scope.name.slice(0, 2).toUpperCase(),
             tooltip: `Scope: ${scope.name}`,
-            // color, // Removed
           };
         }
       }

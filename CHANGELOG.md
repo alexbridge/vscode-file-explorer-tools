@@ -1,13 +1,16 @@
 # Changelog
 
-All notable changes to File Explorer Tools will be documented here.
+## [1.2.0]
 
-## [1.1.1] - 2026-04-28
+### Added
+- **Switch active scope via `Shift+Alt+S` keyboard shortcut.**
+
+## [1.1.1]
 
 ### Fixed
 - **Scopes now work across multi-root workspaces.**
 
-## [1.1.0] - 2026-04-21
+## [1.1.0]
 
 ### Added
 - **MCP service for scopes** — bundled standalone MCP server exposing `list_scopes` and `get_scope_patterns` tools, allowing AI agents to discover and query scope definitions.

@@ -14,7 +14,7 @@
 
 I work on a large monorepo with hundreds of folders and thousands of files. Every day I'd find myself collapsing and expanding the same subtrees, losing track of which files belong to the feature I'm working on, and manually renaming classes after renaming files. Small frictions, but they add up to real time lost.
 
-VS Code's built-in Explorer is surprisingly barebones for a tool developers live in all day. There's no way to bookmark a subset of files, no recursive expand button, and renaming a file doesn't touch the symbols inside it. I looked at what's out there — extensions like **File Nesting Updater** or **Explorer Exclude** solve narrow problems but don't address the broader workflow. **Peacock** colors your workspace, not your files. Nothing gave me a way to say "these 12 files are my current scope" and just hide everything else.
+VS Code's built-in Explorer is surprisingly barebones for a tool developers live in all day. There's no way to bookmark a subset of files, no recursive expand button, and renaming a file doesn't touch the symbols inside it. I looked at what's out there — extensions like **File Nesting Updater** or **Explorer Exclude** solve narrow problems but don't address the broader workflow. Nothing gave me a way to say "these 12 files are my current scope" and just hide everything else. Inspired by IntelliJ's [Scopes Manager](https://plugins.jetbrains.com/plugin/14987-scopes-manager).
 
 So I built File Explorer Tools — a small, focused set of power-ups for the Explorer panel that I actually needed every day:
 
@@ -50,6 +50,7 @@ Assign files and folders to named scopes directly from the Explorer context menu
 | `Scopes Manager: Delete Scope`         | Delete an existing scope                   |
 | `Scopes Manager: Rename Scope`         | Rename an existing scope                   |
 | `Scopes Manager: Clear Scope Patterns` | Remove all patterns from a scope           |
+| `Scopes Manager: Switch Scope`         | Pick the active scope from a quick list    |
 | `Scopes Manager: Install scopes MCP`  | Configure MCP server in the workspace      |
 
 #### Keybindings
@@ -58,8 +59,9 @@ Keybindings are active when the File Explorer or an Editor is focused.
 
 | Name                                | Description                           | Keybinding |
 | ----------------------------------- | ------------------------------------- | ---------- |
-| `Scopes Manager: Add to Scope`      | Add selected files/folders to a scope | `Alt+S`    |
-| `Scopes Manager: Remove from Scope` | Remove selected files from a scope    | `Alt+D`    |
+| `Scopes Manager: Add to Scope`      | Add selected files/folders to a scope | `Alt+S`        |
+| `Scopes Manager: Remove from Scope` | Remove selected files from a scope    | `Alt+D`        |
+| `Scopes Manager: Switch Scope`      | Pick the active scope from a quick list | `Shift+Alt+S` |
 
 #### Context Menus
 

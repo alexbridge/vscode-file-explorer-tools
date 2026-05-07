@@ -4,7 +4,6 @@ export const CMD = {
   CREATE_SCOPE: 'scopesManager.createScope',
   DELETE_SCOPE: 'scopesManager.deleteScope',
   RENAME_SCOPE: 'scopesManager.renameScope',
-  EDIT_SCOPE_COLOR: 'scopesManager.editScopeColor',
   CLEAR_SCOPE: 'scopesManager.clearScope',
   REMOVE_PATTERN: 'scopesManager.removePatternFromScope',
 } as const;

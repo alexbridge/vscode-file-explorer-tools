@@ -110,15 +110,6 @@ export class ScopeManager implements vscode.Disposable {
     this._onDidChangeScopes.fire();
   }
 
-  async setColor(id: string, colorId: string): Promise<void> {
-    const scope = this.scopes.get(id);
-    if (!scope) {
-      return;
-    }
-    await this.persist(scope.storage);
-    this._onDidChangeScopes.fire();
-  }
-
   async addToScope(id: string, pattern: string): Promise<void> {
     const scope = this.scopes.get(id);
     if (!scope) {
