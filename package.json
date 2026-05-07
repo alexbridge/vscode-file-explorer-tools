@@ -1,0 +1,214 @@
+{
+  "name": "file-explorer-tools",
+  "displayName": "File Explorer Tools",
+  "description": "Scopes Manager (color-coded file scopes) + Recursive Expand All for the VS Code file explorer",
+  "version": "0.1.0",
+  "publisher": "oleksandr-bilenko",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "tsc --noEmit"
+  },
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "scopesListView",
+          "name": "Scopes"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "scopesListView",
+        "contents": "No scopes defined yet.\n[Create Scope](command:scopesManager.createScope)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "scopesManager.addToScope",
+        "title": "Add to Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.removeFromScope",
+        "title": "Remove from Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.createScope",
+        "title": "Create Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.deleteScope",
+        "title": "Delete Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.renameScope",
+        "title": "Rename Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.editScopeColor",
+        "title": "Change Scope Color",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.clearScope",
+        "title": "Clear Scope Patterns",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.removePatternFromScope",
+        "title": "Remove Pattern",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.selectScope",
+        "title": "Select Scope",
+        "category": "Scopes Manager"
+      },
+      {
+        "command": "scopesManager.deselectScope",
+        "title": "Clear Scope Filter",
+        "category": "Scopes Manager",
+        "icon": "$(close)"
+      },
+      {
+        "command": "fileExplorer.expandRecursively",
+        "title": "Expand Recursively",
+        "category": "File Explorer",
+        "icon": "$(expand-all)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "scopesManager.addToScope",
+          "group": "scopesManager@1"
+        },
+        {
+          "command": "scopesManager.removeFromScope",
+          "group": "scopesManager@2"
+        },
+        {
+          "command": "fileExplorer.expandRecursively",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "fileExplorer.expandRecursively"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "scopesManager.createScope",
+          "when": "view == scopesListView",
+          "group": "navigation"
+        },
+        {
+          "command": "scopesManager.deselectScope",
+          "when": "view == scopesListView && scopesManager.activeScope",
+          "group": "navigation"
+        },
+        {
+          "command": "fileExplorer.expandRecursively",
+          "when": "view == workbench.explorer.fileView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "scopesManager.deleteScope",
+          "when": "view == scopesListView && viewItem == scope",
+          "group": "scopeActions@1"
+        },
+        {
+          "command": "scopesManager.renameScope",
+          "when": "view == scopesListView && viewItem == scope",
+          "group": "scopeActions@2"
+        },
+        {
+          "command": "scopesManager.editScopeColor",
+          "when": "view == scopesListView && viewItem == scope",
+          "group": "scopeActions@3"
+        },
+        {
+          "command": "scopesManager.clearScope",
+          "when": "view == scopesListView && viewItem == scope",
+          "group": "scopeActions@4"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "scopesManager.addToScope",
+        "key": "alt+s",
+        "when": "explorerViewletVisible && filesExplorerFocus"
+      },
+      {
+        "command": "scopesManager.removeFromScope",
+        "key": "alt+d",
+        "when": "explorerViewletVisible && filesExplorerFocus"
+      }
+    ],
+    "configuration": {
+      "title": "File Explorer Tools",
+      "properties": {
+        "scopesManager.localScopes": {
+          "type": "array",
+          "default": [],
+          "description": "Locally stored scopes (not committed to VCS). Managed automatically by the Scopes Manager."
+        },
+        "fileExplorer.expandRecursively.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".git",
+            ".svn",
+            ".vs",
+            ".vscode",
+            ".cache",
+            "__pycache__",
+            "node_modules",
+            "dist",
+            "packages",
+            "build",
+            "target",
+            "Release",
+            "Debug",
+            "bin",
+            "obj"
+          ],
+          "description": "Patterns for folders to exclude from recursive expansion. Supports glob patterns."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/picomatch": "^3.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "picomatch": "^4.0.0"
+  }
+}
