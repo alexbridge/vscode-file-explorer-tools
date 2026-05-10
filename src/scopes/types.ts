@@ -2,7 +2,6 @@ export interface ScopeDefinition {
   id: string;
   name: string;
   storage: 'local' | 'shared';
-
   patterns: string[];
 }
 

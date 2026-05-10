@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { ScopeManager } from './scope-manager';
+import { ScopeListItem, ScopesListProvider } from './tree-provider';
 import { ScopeDefinition } from './types';
-import { generateId, patternForUri, uriToRelativePath, findCommonRoot } from './utils';
-import { ScopesListProvider } from './tree-provider';
+import { findCommonRoot, generateId, patternForUri, uriToRelativePath } from './utils';
 
 async function resolveUris(
   uri: vscode.Uri | undefined,
@@ -126,17 +126,13 @@ export function registerScopeCommands(
     vscode.commands.registerCommand(
       'scopesManager.removeFromScope',
       async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
-        const { uris, fromExplorer } = await resolveUris(uri, selectedUris);
+        const { uris } = await resolveUris(uri, selectedUris);
         if (uris.length === 0) {
           vscode.window.showWarningMessage('No files selected.');
           return;
         }
 
-        const activeScopeId = treeProvider.getActiveScopeId();
-        // Only use active scope silently if NOT from explorer
-        let scopeId: string | undefined = fromExplorer ? undefined : activeScopeId;
-        const wasSilentlyRemoved = !!scopeId;
-
+        let scopeId = treeProvider.getActiveScopeId();
         if (!scopeId) {
           const rel = uriToRelativePath(uris[0]);
           if (!rel) {
@@ -149,14 +145,17 @@ export function registerScopeCommands(
             return;
           }
 
-          const picked = await vscode.window.showQuickPick(
-            matchingScopes.map((s) => ({ label: s.name, scopeId: s.id })),
-            { placeHolder: 'Remove from which scope?' }
-          );
-          if (!picked) {
-            return;
+          scopeId = matchingScopes[0].id;
+          if (matchingScopes.length > 1) {
+            const picked = await vscode.window.showQuickPick(
+              matchingScopes.map((s) => ({ label: s.name, scopeId: s.id })),
+              { placeHolder: 'Remove from which scope?' }
+            );
+            if (!picked) {
+              return;
+            }
+            scopeId = picked.scopeId;
           }
-          scopeId = picked.scopeId;
         }
 
         const scope = manager.getScope(scopeId);
@@ -172,9 +171,7 @@ export function registerScopeCommands(
           }
         }
 
-        if (wasSilentlyRemoved) {
-          vscode.window.showInformationMessage(`Removed from scope: ${scope.name}`);
-        }
+        vscode.window.showInformationMessage(`Removed from scope: ${scope.name}`);
       }
     )
   );
@@ -188,77 +185,68 @@ export function registerScopeCommands(
 
   // Delete Scope
   disposables.push(
-    vscode.commands.registerCommand(
-      'scopesManager.deleteScope',
-      async (item?: { scopeId?: string }) => {
-        const scopeId = item?.scopeId ?? (await pickScope(manager, 'Select scope to delete'));
-        if (!scopeId) {
-          return;
-        }
-        const scope = manager.getScope(scopeId);
-        if (!scope) {
-          return;
-        }
-        const confirm = await vscode.window.showWarningMessage(
-          `Delete scope "${scope.name}"?`,
-          { modal: true },
-          'Delete'
-        );
-        if (confirm === 'Delete') {
-          await manager.deleteScope(scopeId);
-        }
+    vscode.commands.registerCommand('scopesManager.deleteScope', async (item?: ScopeListItem) => {
+      let scope = item?.scope;
+      if (!scope || !scope.id) {
+        const scopeId = await pickScope(manager, 'Select scope to delete');
+        scope = scopeId ? manager.getScope(scopeId) : undefined;
       }
-    )
+      if (!scope || !scope.id) {
+        return;
+      }
+      const confirm = await vscode.window.showWarningMessage(
+        `Delete scope "${scope.name}"?`,
+        { modal: true },
+        'Delete'
+      );
+      if (confirm === 'Delete') {
+        await manager.deleteScope(scope.id);
+      }
+    })
   );
 
   // Rename Scope
   disposables.push(
-    vscode.commands.registerCommand(
-      'scopesManager.renameScope',
-      async (item?: { scopeId?: string }) => {
-        const scopeId = item?.scopeId ?? (await pickScope(manager, 'Select scope to rename'));
-        if (!scopeId) {
-          return;
-        }
-        const scope = manager.getScope(scopeId);
-        if (!scope) {
-          return;
-        }
-        const newName = await vscode.window.showInputBox({
-          prompt: 'New scope name',
-          value: scope.name,
-          validateInput: (v) => (v.trim() ? null : 'Name cannot be empty'),
-        });
-        if (newName) {
-          await manager.renameScope(scopeId, newName.trim());
-        }
+    vscode.commands.registerCommand('scopesManager.renameScope', async (item?: ScopeListItem) => {
+      let scope = item?.scope;
+      if (!scope || !scope.id) {
+        const scopeId = await pickScope(manager, 'Select scope to rename');
+        scope = scopeId ? manager.getScope(scopeId) : undefined;
       }
-    )
+      if (!scope || !scope.id) {
+        return;
+      }
+      const newName = await vscode.window.showInputBox({
+        prompt: 'New scope name',
+        value: scope.name,
+        validateInput: (v) => (v.trim() ? null : 'Name cannot be empty'),
+      });
+      if (newName) {
+        await manager.renameScope(scope.id, newName.trim());
+      }
+    })
   );
 
   // Clear Scope
   disposables.push(
-    vscode.commands.registerCommand(
-      'scopesManager.clearScope',
-      async (item?: { scopeId?: string }) => {
-        const scopeId = item?.scopeId ?? (await pickScope(manager, 'Select scope to clear'));
-        if (!scopeId) {
-          return;
-        }
-        const scope = manager.getScope(scopeId);
-        if (!scope) {
-          return;
-        }
-        const confirm = await vscode.window.showWarningMessage(
-          `Clear all patterns from "${scope.name}"?`,
-          { modal: true },
-          'Clear'
-        );
-        if (confirm === 'Clear') {
-          await manager.clearScope(scopeId);
-        }
+    vscode.commands.registerCommand('scopesManager.clearScope', async (item?: ScopeListItem) => {
+      let scope = item?.scope;
+      if (!scope || !scope.id) {
+        const scopeId = await pickScope(manager, 'Select scope to clear');
+        scope = scopeId ? manager.getScope(scopeId) : undefined;
       }
-    )
+      if (!scope || !scope.id) {
+        return;
+      }
+      const confirm = await vscode.window.showWarningMessage(
+        `Clear all patterns from "${scope.name}"?`,
+        { modal: true },
+        'Clear'
+      );
+      if (confirm === 'Clear') {
+        await manager.clearScope(scope.id);
+      }
+    })
   );
 
   // Remove Pattern from Scope

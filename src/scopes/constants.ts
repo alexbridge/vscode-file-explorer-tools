@@ -10,6 +10,5 @@ export const CMD = {
 
 export const CONFIG_KEY = 'scopesManager';
 export const LOCAL_SCOPES_KEY = 'localScopes';
-export const ACTIVE_SCOPE_KEY = 'activeScopeId';
 export const MANAGED_PATTERNS_KEY = 'managedPatterns';
 export const SHARED_SCOPES_FILENAME = 'scopes.json';

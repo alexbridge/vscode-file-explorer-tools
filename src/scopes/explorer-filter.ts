@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
+import { CONFIG_KEY, MANAGED_PATTERNS_KEY } from './constants';
 import { ScopeManager } from './scope-manager';
 import { ScopeDefinition } from './types';
 import { fileMatchesPattern } from './utils';
-import { ACTIVE_SCOPE_KEY, CONFIG_KEY, MANAGED_PATTERNS_KEY } from './constants';
 
 export class ScopeExplorerFilter implements vscode.Disposable {
   private activeScopeId: string | undefined;
@@ -12,31 +12,9 @@ export class ScopeExplorerFilter implements vscode.Disposable {
   constructor(private readonly manager: ScopeManager) {
     // Restore state from configuration
     const config = vscode.workspace.getConfiguration(CONFIG_KEY);
-    this.activeScopeId = config.get<string>(ACTIVE_SCOPE_KEY);
     this.managedPatterns = config.get<string[]>(MANAGED_PATTERNS_KEY, []);
 
-    // If we have an active scope on startup, apply it
-    if (this.activeScopeId) {
-      const scope = this.manager.getScope(this.activeScopeId);
-      if (scope) {
-        this.applyFilter(scope);
-      }
-    }
-
-    manager.onDidChangeScopes(
-      () => {
-        if (this.activeScopeId) {
-          const scope = manager.getScope(this.activeScopeId);
-          if (scope) {
-            this.applyFilter(scope);
-          } else {
-            this.clearFilter();
-          }
-        }
-      },
-      undefined,
-      this.disposables
-    );
+    this.clearFilter();
   }
 
   getActiveScopeId(): string | undefined {
@@ -55,7 +33,6 @@ export class ScopeExplorerFilter implements vscode.Disposable {
     }
 
     this.activeScopeId = scopeId;
-    await this.persistActiveScope(scopeId);
     await vscode.commands.executeCommand('setContext', 'scopesManager.activeScope', true);
     await this.applyFilter(scope);
 
@@ -65,15 +42,9 @@ export class ScopeExplorerFilter implements vscode.Disposable {
 
   async clearFilter(): Promise<void> {
     this.activeScopeId = undefined;
-    await this.persistActiveScope(undefined);
     await vscode.commands.executeCommand('setContext', 'scopesManager.activeScope', false);
     // Passing an empty scope definition to applyFilter will remove all managed patterns
     await this.applyFilter({ id: '', name: '', patterns: [], storage: 'local' });
-  }
-
-  private async persistActiveScope(scopeId: string | undefined): Promise<void> {
-    const config = vscode.workspace.getConfiguration(CONFIG_KEY);
-    await config.update(ACTIVE_SCOPE_KEY, scopeId, vscode.ConfigurationTarget.Workspace);
   }
 
   private async persistManagedPatterns(patterns: string[]): Promise<void> {

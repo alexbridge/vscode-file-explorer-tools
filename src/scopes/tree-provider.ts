@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ScopeManager } from './scope-manager';
 import { ScopeDefinition } from './types';
 
-class ScopeListItem extends vscode.TreeItem {
+export class ScopeListItem extends vscode.TreeItem {
   constructor(
     public readonly scope: ScopeDefinition,
     isActive: boolean

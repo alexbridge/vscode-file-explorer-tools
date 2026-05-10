@@ -103,7 +103,7 @@
         "command": "scopesManager.deselectScope",
         "title": "Clear Scope Filter",
         "category": "Scopes Manager",
-        "icon": "$(close)"
+        "icon": "$(clear-all)"
       },
       {
         "command": "fileExplorer.expandRecursively",
@@ -170,7 +170,7 @@
         },
         {
           "command": "scopesManager.deselectScope",
-          "when": "view == scopesListView && scopesManager.activeScope",
+          "when": "view == scopesListView",
           "group": "navigation"
         },
         {
@@ -229,14 +229,6 @@
           },
           "default": [],
           "description": "Locally stored scopes (not committed to VCS). Managed automatically by the Scopes Manager."
-        },
-        "scopesManager.activeScopeId": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "The ID of the currently active scope. Managed automatically by the extension."
         },
         "scopesManager.managedPatterns": {
           "type": "array",
