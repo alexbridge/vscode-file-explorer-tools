@@ -85,6 +85,27 @@ async function main() {
         version: '2.0.0',
     });
 
+    server.prompt('scope-workflow', 'How to use the scope manager correctly', {}, async () => ({
+        messages: [{
+            role: 'user',
+            content: {
+                type: 'text',
+                text: [
+                    'You have access to a scope manager MCP server with these tools:',
+                    '  - list_scopes: returns all available scope names',
+                    '  - get_scope_patterns(scopeName): returns glob patterns for a scope',
+                    '',
+                    'Workflow:',
+                    '1. Call list_scopes to discover available scopes.',
+                    '2. If the user has not specified a scope, ask which one to work in.',
+                    '3. Call get_scope_patterns(scopeName) to get the file glob patterns.',
+                    '4. Restrict ALL file reads and edits to files matching those patterns.',
+                    '5. Never touch files outside the active scope unless explicitly instructed.',
+                ].join('\n')
+            }
+        }]
+    }));
+
     server.tool('list_scopes', 'List all available scope names', {}, async () => {
         const scopes = getAllScopes();
         const names = scopes.filter(s => s && s.name).map(s => s.name);
