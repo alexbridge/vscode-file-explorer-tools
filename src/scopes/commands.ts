@@ -227,6 +227,43 @@ export function registerScopeCommands(
     })
   );
 
+  // Change Visibility
+  disposables.push(
+    vscode.commands.registerCommand('scopesManager.changeStorage', async (item?: ScopeListItem) => {
+      let scope = item?.scope;
+      if (!scope || !scope.id) {
+        const scopeId = await pickScope(manager, 'Select scope to change visibility');
+        scope = scopeId ? manager.getScope(scopeId) : undefined;
+      }
+      if (!scope || !scope.id) {
+        return;
+      }
+
+      const storageItems: (vscode.QuickPickItem & { storage: 'local' | 'shared' })[] = [
+        {
+          label: 'Local',
+          description: 'Stored in workspace settings (not committed)',
+          picked: scope.storage === 'local',
+          storage: 'local',
+        },
+        {
+          label: 'Shared',
+          description: 'Stored in .vscode/scopes.json (can be committed)',
+          picked: scope.storage === 'shared',
+          storage: 'shared',
+        },
+      ];
+
+      const storagePicked = await vscode.window.showQuickPick(storageItems, {
+        placeHolder: `Change visibility for "${scope.name}"`,
+      });
+
+      if (storagePicked && storagePicked.storage !== scope.storage) {
+        await manager.changeStorage(scope.id, storagePicked.storage);
+      }
+    })
+  );
+
   // Clear Scope
   disposables.push(
     vscode.commands.registerCommand('scopesManager.clearScope', async (item?: ScopeListItem) => {

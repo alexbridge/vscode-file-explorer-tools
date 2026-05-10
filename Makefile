@@ -33,3 +33,6 @@ publish: pack
 
 clean:
 	rm -rf dist node_modules *.vsix
+
+tools-api-mcp-inspector:
+	@npx @modelcontextprotocol/inspector node ./tools/mcp-scopes/server.js

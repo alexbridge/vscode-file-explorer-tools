@@ -112,6 +112,11 @@
         "icon": "$(expand-all)"
       },
       {
+        "command": "scopesManager.changeStorage",
+        "title": "Change storage (Local/Shared)",
+        "category": "Scopes Manager"
+      },
+      {
         "command": "scopesManager.installMcpServer",
         "title": "Install scopes MCP",
         "category": "Scopes Manager"
@@ -197,6 +202,11 @@
         },
         {
           "command": "scopesManager.clearScope",
+          "when": "view == scopesListView && viewItem == scope",
+          "group": "scopeActions@3"
+        },
+        {
+          "command": "scopesManager.changeStorage",
           "when": "view == scopesListView && viewItem == scope",
           "group": "scopeActions@4"
         }

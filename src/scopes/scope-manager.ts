@@ -7,6 +7,7 @@ import { clearMatcherCache } from './utils';
 export class ScopeManager implements vscode.Disposable {
   private scopes = new Map<string, ScopeDefinition>();
   private disposables: vscode.Disposable[] = [];
+  private suppressReload = false;
 
   private readonly _onDidChangeScopes = new vscode.EventEmitter<void>();
   readonly onDidChangeScopes = this._onDidChangeScopes.event;
@@ -36,6 +37,9 @@ export class ScopeManager implements vscode.Disposable {
   }
 
   private reload(): void {
+    if (this.suppressReload) {
+      return;
+    }
     this.load();
     clearMatcherCache();
     this._onDidChangeScopes.fire();
@@ -107,6 +111,28 @@ export class ScopeManager implements vscode.Disposable {
     }
     scope.name = newName;
     await this.persist(scope.storage);
+    this._onDidChangeScopes.fire();
+  }
+
+  async changeStorage(id: string, newStorage: 'local' | 'shared'): Promise<void> {
+    const scope = this.scopes.get(id);
+    if (!scope || scope.storage === newStorage) {
+      return;
+    }
+
+    const oldStorage = scope.storage;
+    scope.storage = newStorage; // flip in-memory; persist* methods derive state from this.scopes
+
+    // Suppress reload so that config change events fired by persistLocal()
+    // don't overwrite this.scopes before persistShared() runs.
+    this.suppressReload = true;
+    try {
+      await this.persist(oldStorage); // remove from old store (scope no longer filtered in)
+      await this.persist(newStorage); // add to new store (scope now filtered in)
+    } finally {
+      this.suppressReload = false;
+    }
+
     this._onDidChangeScopes.fire();
   }
 
@@ -207,8 +233,9 @@ export class ScopeManager implements vscode.Disposable {
       await vscode.workspace.fs.createDirectory(dirUri);
     }
 
-    const content = Buffer.from(JSON.stringify(data, null, 2) + '\n', 'utf-8');
-    await vscode.workspace.fs.writeFile(fileUri, content);
+    const jsonString = JSON.stringify(data, null, 2);
+    const finalContent = jsonString + '\n';
+    await vscode.workspace.fs.writeFile(fileUri, Buffer.from(finalContent, 'utf-8'));
   }
 
   private async persistLocal(): Promise<void> {

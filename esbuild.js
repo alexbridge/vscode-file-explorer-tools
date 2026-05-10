@@ -30,6 +30,7 @@ async function main() {
       format: "cjs",
       platform: "node",
       target: "es2022",
+      nodePaths: [],
       ...(production && { minify: true, legalComments: "none" }),
     })
     .then(() => console.log("MCP server bundled."));

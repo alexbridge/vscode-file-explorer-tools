@@ -8,9 +8,16 @@ export class ScopeListItem extends vscode.TreeItem {
     isActive: boolean
   ) {
     super(scope.name, vscode.TreeItemCollapsibleState.None);
-    // Changing id forces VS Code to re-render the item
     this.id = `${scope.id}:${isActive ? 1 : 0}`;
     this.contextValue = 'scope';
+
+    this.iconPath =
+      scope.storage === 'local'
+        ? new vscode.ThemeIcon('record', isActive ? new vscode.ThemeColor('charts.red') : undefined)
+        : new vscode.ThemeIcon(
+            'broadcast',
+            isActive ? new vscode.ThemeColor('charts.red') : undefined
+          );
 
     if (isActive) {
       this.label = {
@@ -18,10 +25,8 @@ export class ScopeListItem extends vscode.TreeItem {
         highlights: [[0, scope.name.length]],
       };
       this.description = 'active';
-      this.iconPath = new vscode.ThemeIcon('pass-filled');
     } else {
       this.description = `${scope.patterns.length} pattern(s)`;
-      this.iconPath = new vscode.ThemeIcon('circle-outline');
     }
 
     this.tooltip = `${scope.name}\n${scope.patterns.length} pattern(s)`;
@@ -33,8 +38,26 @@ export class ScopeListItem extends vscode.TreeItem {
   }
 }
 
-export class ScopesListProvider implements vscode.TreeDataProvider<ScopeListItem> {
-  private readonly _onDidChangeTreeData = new vscode.EventEmitter<ScopeListItem | undefined>();
+export class ScopeCategoryItem extends vscode.TreeItem {
+  constructor(
+    public readonly storage: 'local' | 'shared',
+    scopeCount: number
+  ) {
+    super(storage === 'shared' ? 'Shared' : 'Local', vscode.TreeItemCollapsibleState.Expanded);
+    this.id = `category:${storage}`;
+    this.contextValue = 'scopeCategory';
+    this.description = `${scopeCount} scope(s)`;
+    this.iconPath = new vscode.ThemeIcon(
+      storage === 'shared' ? 'broadcast' : 'home',
+      new vscode.ThemeColor('descriptionForeground')
+    );
+  }
+}
+
+type TreeNode = ScopeCategoryItem | ScopeListItem;
+
+export class ScopesListProvider implements vscode.TreeDataProvider<TreeNode> {
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | undefined>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private activeScopeId: string | undefined;
@@ -46,7 +69,6 @@ export class ScopesListProvider implements vscode.TreeDataProvider<ScopeListItem
 
   setActiveScope(id: string | undefined): void {
     this.activeScopeId = id;
-    // Immediate refresh — cancels any pending debounced refresh
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = undefined;
@@ -68,13 +90,38 @@ export class ScopesListProvider implements vscode.TreeDataProvider<ScopeListItem
     }, 200);
   }
 
-  getTreeItem(element: ScopeListItem): vscode.TreeItem {
+  getTreeItem(element: TreeNode): vscode.TreeItem {
     return element;
   }
 
-  getChildren(): ScopeListItem[] {
-    const scopes = this.manager.getAllScopes().sort((a, b) => a.name.localeCompare(b.name));
-    vscode.commands.executeCommand('setContext', 'scopesManager.hasScopes', scopes.length > 0);
-    return scopes.map((s) => new ScopeListItem(s, s.id === this.activeScopeId));
+  getChildren(element?: TreeNode): TreeNode[] {
+    const allScopes = this.manager.getAllScopes();
+    vscode.commands.executeCommand('setContext', 'scopesManager.hasScopes', allScopes.length > 0);
+
+    const sort = (a: ScopeDefinition, b: ScopeDefinition) => a.name.localeCompare(b.name);
+
+    // Root level — return category nodes
+    if (!element) {
+      const result: ScopeCategoryItem[] = [];
+      const shared = allScopes.filter((s) => s.storage === 'shared');
+      const local = allScopes.filter((s) => s.storage === 'local');
+      if (shared.length) {
+        result.push(new ScopeCategoryItem('shared', shared.length));
+      }
+      if (local.length) {
+        result.push(new ScopeCategoryItem('local', local.length));
+      }
+      return result;
+    }
+
+    // Children of a category — return scopes
+    if (element instanceof ScopeCategoryItem) {
+      return allScopes
+        .filter((s) => s.storage === element.storage)
+        .sort(sort)
+        .map((s) => new ScopeListItem(s, s.id === this.activeScopeId));
+    }
+
+    return [];
   }
 }
