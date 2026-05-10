@@ -47,11 +47,21 @@ function readSharedScopes() {
     }
 }
 
+// Strip the leading workspace folder name from patterns (e.g. "my-project/src/**" -> "src/**")
+function normalizePatterns(patterns) {
+    const folderName = path.basename(process.cwd());
+    return patterns.map(p => {
+        const prefix = folderName + '/';
+        return p.startsWith(prefix) ? p.slice(prefix.length) : p;
+    });
+}
+
 /**
  * Combines all local and shared scopes.
  */
 function getAllScopes() {
-    return [...readSharedScopes(), ...readLocalScopes()];
+    const scopes = [...readSharedScopes(), ...readLocalScopes()];
+    return scopes.map(s => ({ ...s, patterns: normalizePatterns(s.patterns || []) }));
 }
 
 async function main() {
