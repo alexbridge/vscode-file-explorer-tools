@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
 /**
  * Builds the MCP server definition with the absolute path to the server script.
@@ -20,7 +20,7 @@ function buildMcpServerDefinition(extensionPath: string) {
  * If neither exists, it returns the path for a new .mcp.json file.
  * @returns {string | null} The absolute path to the config file, or null if project root is not found.
  */
-function findMcpConfigFile(): string | null {
+function findMcpConfigFile(): string[] | null {
   const rootPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!rootPath) {
     vscode.window.showErrorMessage(
@@ -32,14 +32,15 @@ function findMcpConfigFile(): string | null {
   const mcpJsonPath = path.join(rootPath, '.mcp.json');
   const geminiSettingsPath = path.join(rootPath, '.gemini', 'settings.json');
 
+  const paths = new Set([mcpJsonPath]);
+
   if (fs.existsSync(mcpJsonPath)) {
-    return mcpJsonPath;
-  } else if (fs.existsSync(geminiSettingsPath)) {
-    return geminiSettingsPath;
-  } else {
-    // Default to creating .mcp.json if neither exists
-    return mcpJsonPath;
+    paths.add(mcpJsonPath);
   }
+  if (fs.existsSync(geminiSettingsPath)) {
+    paths.add(geminiSettingsPath);
+  }
+  return [...paths];
 }
 
 /**
@@ -98,30 +99,32 @@ async function writeJsonFile(filePath: string, data: any): Promise<boolean> {
 export function registerInstallMcpCommand(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('scopesManager.installMcpServer', async () => {
-      const configFilePath = findMcpConfigFile();
-      if (!configFilePath) {
+      const configFilePaths = findMcpConfigFile();
+      if (!configFilePaths) {
         return;
       }
 
-      const currentConfig = await readOrCreateJsonFile(configFilePath);
-      if (currentConfig === null) {
-        return;
-      }
+      for (const configFilePath of configFilePaths) {
+        const currentConfig = await readOrCreateJsonFile(configFilePath);
+        if (currentConfig === null) {
+          return;
+        }
 
-      if (!currentConfig.mcpServers) {
-        currentConfig.mcpServers = {};
-      }
+        if (!currentConfig.mcpServers) {
+          currentConfig.mcpServers = {};
+        }
 
-      currentConfig.mcpServers['scope-manager-mcp'] = buildMcpServerDefinition(
-        context.extensionPath
-      );
-
-      const success = await writeJsonFile(configFilePath, currentConfig);
-      if (success) {
-        const configFileName = path.basename(configFilePath);
-        vscode.window.showInformationMessage(
-          `MCP server 'scope-manager-mcp' configuration ${fs.existsSync(configFilePath) ? 'updated' : 'created'} in ${configFileName}.`
+        currentConfig.mcpServers['scope-manager-mcp'] = buildMcpServerDefinition(
+          context.extensionPath
         );
+
+        const success = await writeJsonFile(configFilePath, currentConfig);
+        if (success) {
+          const configFileName = path.basename(configFilePath);
+          vscode.window.showInformationMessage(
+            `MCP server 'scope-manager-mcp' configuration ${fs.existsSync(configFilePath) ? 'updated' : 'created'} in ${configFileName}.`
+          );
+        }
       }
     })
   );
