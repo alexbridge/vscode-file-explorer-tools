@@ -6,21 +6,47 @@ const path = require('path');
 const SETTINGS_FILE_PATH = path.join(process.cwd(), '.vscode', 'settings.json');
 const SHARED_SCOPES_FILE_PATH = path.join(process.cwd(), '.vscode', 'scopes.json');
 
+// State-machine JSONC parser — no external deps, handles comments and
+// trailing commas without touching string contents (e.g. "//" in glob patterns).
 function parseJsonc(content) {
-    return JSON.parse(
-        content
-            .replace(/\/\/.*$/gm, '')
-            .replace(/\/\*[\s\S]*?\*\//g, '')
-            .replace(/,\s*([}\]])/g, '$1')
-    );
+    let result = '';
+    let i = 0;
+    let inString = false;
+    while (i < content.length) {
+        if (content[i] === '"' && (i === 0 || content[i - 1] !== '\\')) {
+            inString = !inString;
+            result += content[i++];
+            continue;
+        }
+        if (inString) { result += content[i++]; continue; }
+        if (content[i] === '/' && content[i + 1] === '*') {
+            const end = content.indexOf('*/', i + 2);
+            i = end === -1 ? content.length : end + 2;
+            continue;
+        }
+        if (content[i] === '/' && content[i + 1] === '/') {
+            const end = content.indexOf('\n', i + 2);
+            i = end === -1 ? content.length : end;
+            continue;
+        }
+        if (content[i] === ',') {
+            if (content.slice(i + 1).match(/^\s*([}\]])/)) { i++; continue; }
+        }
+        result += content[i++];
+    }
+    return JSON.parse(result);
 }
 
-/**
- * Reads local scopes from .vscode/settings.json.
- */
+// Strip the leading workspace folder name from patterns
+// e.g. "my-project/src/**" -> "src/**"
+function normalizePatterns(patterns) {
+    const folderName = path.basename(process.cwd());
+    const prefix = folderName + '/';
+    return (patterns || []).map(p => p.startsWith(prefix) ? p.slice(prefix.length) : p);
+}
+
 function readLocalScopes() {
-    const localExists = fs.existsSync(SETTINGS_FILE_PATH);
-    if (!localExists) {
+    if (!fs.existsSync(SETTINGS_FILE_PATH)) {
         return [];
     }
     try {
@@ -32,36 +58,21 @@ function readLocalScopes() {
     }
 }
 
-/**
- * Reads shared scopes from .vscode/scopes.json.
- */
 function readSharedScopes() {
     if (!fs.existsSync(SHARED_SCOPES_FILE_PATH)) {
         return [];
     }
     try {
-        const settings = parseJsonc(fs.readFileSync(SHARED_SCOPES_FILE_PATH, 'utf-8'));
-        return Array.isArray(settings.scopes) ? settings.scopes : [];
+        const data = parseJsonc(fs.readFileSync(SHARED_SCOPES_FILE_PATH, 'utf-8'));
+        return Array.isArray(data.scopes) ? data.scopes : [];
     } catch (e) {
         return [];
     }
 }
 
-// Strip the leading workspace folder name from patterns (e.g. "my-project/src/**" -> "src/**")
-function normalizePatterns(patterns) {
-    const folderName = path.basename(process.cwd());
-    return patterns.map(p => {
-        const prefix = folderName + '/';
-        return p.startsWith(prefix) ? p.slice(prefix.length) : p;
-    });
-}
-
-/**
- * Combines all local and shared scopes.
- */
 function getAllScopes() {
     const scopes = [...readSharedScopes(), ...readLocalScopes()];
-    return scopes.map(s => ({ ...s, patterns: normalizePatterns(s.patterns || []) }));
+    return scopes.map(s => ({ ...s, patterns: normalizePatterns(s.patterns) }));
 }
 
 async function main() {
@@ -76,9 +87,7 @@ async function main() {
 
     server.tool('list_scopes', 'List all available scope names', {}, async () => {
         const scopes = getAllScopes();
-        const names = scopes
-            .filter(s => s && s.name)
-            .map(s => s.name);
+        const names = scopes.filter(s => s && s.name).map(s => s.name);
         return { content: [{ type: 'text', text: JSON.stringify(names, null, 2) }] };
     });
 

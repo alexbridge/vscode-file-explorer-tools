@@ -1,4 +1,5 @@
 .claude/
+.gemini/
 node_modules/
 src/
 *.ts

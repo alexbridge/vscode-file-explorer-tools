@@ -20,7 +20,7 @@ lint:
 format:
 	npm run format
 
-pack: format lint
+pack: clean format lint
 	npm run package
 
 install-ext: pack
@@ -32,7 +32,7 @@ publish: pack
 	npx ovsx publish --pat $(OPEN_VSX_TOKEN)
 
 clean:
-	rm -rf dist node_modules *.vsix
+	rm -rf dist *.vsix
 
 tools-api-mcp-inspector:
 	@npx @modelcontextprotocol/inspector node ./tools/mcp-scopes/server.js

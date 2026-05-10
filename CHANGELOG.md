@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0]
+
+### Added
+- **Scope storage** - possibility to change storage of scope
+- **Scopes view** - split shared / local scopes
+### Improve
+- **MCP Scopes** - MCP install to all mcp config files in project (.mcp.json, .gemini/settings.json)
+- **MCP Scopes** - MCP tools handle JSONC format (comments, trailing commas)
+
 ## [1.2.0]
 
 ### Added
