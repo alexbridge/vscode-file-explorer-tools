@@ -87,6 +87,11 @@ export class ScopeExplorerFilter implements vscode.Disposable {
         const localPatterns = patternsByFolder.get(root.name);
         const folderConfig = vscode.workspace.getConfiguration('files', root.uri);
         const currentExcludes = { ...folderConfig.get<Record<string, boolean>>('exclude') };
+        const searchConfig = vscode.workspace.getConfiguration('search', root.uri);
+        const currentSearchExcludes = {
+          ...searchConfig.get<Record<string, boolean>>('exclude'),
+        };
+        const addedPatterns: string[] = [];
 
         if (!localPatterns || localPatterns.length === 0) {
           // This folder is not in the scope at all — exclude everything at the root
@@ -98,6 +103,7 @@ export class ScopeExplorerFilter implements vscode.Disposable {
           }
           for (const [name] of entries) {
             currentExcludes[name] = true;
+            addedPatterns.push(name);
             newManagedPatterns.push(`${root.name}/${name}`);
           }
         } else {
@@ -110,13 +116,24 @@ export class ScopeExplorerFilter implements vscode.Disposable {
           const excludePatterns = await this.computeExcludes(root.uri, '', localPatterns, entries);
           for (const pattern of excludePatterns) {
             currentExcludes[pattern] = true;
+            addedPatterns.push(pattern);
             newManagedPatterns.push(`${root.name}/${pattern}`);
           }
+        }
+
+        // Override search.exclude so global search still finds these paths
+        for (const p of addedPatterns) {
+          currentSearchExcludes[p] = false;
         }
 
         await folderConfig.update(
           'exclude',
           currentExcludes,
+          vscode.ConfigurationTarget.WorkspaceFolder
+        );
+        await searchConfig.update(
+          'exclude',
+          currentSearchExcludes,
           vscode.ConfigurationTarget.WorkspaceFolder
         );
       }
@@ -159,12 +176,25 @@ export class ScopeExplorerFilter implements vscode.Disposable {
       }
       const folderConfig = vscode.workspace.getConfiguration('files', root.uri);
       const currentExcludes = { ...folderConfig.get<Record<string, boolean>>('exclude') };
+      const searchConfig = vscode.workspace.getConfiguration('search', root.uri);
+      const currentSearchExcludes = {
+        ...searchConfig.get<Record<string, boolean>>('exclude'),
+      };
       for (const p of patterns) {
         delete currentExcludes[p];
+        // Only remove our own override (false). Leave user-set entries alone.
+        if (currentSearchExcludes[p] === false) {
+          delete currentSearchExcludes[p];
+        }
       }
       await folderConfig.update(
         'exclude',
         currentExcludes,
+        vscode.ConfigurationTarget.WorkspaceFolder
+      );
+      await searchConfig.update(
+        'exclude',
+        currentSearchExcludes,
         vscode.ConfigurationTarget.WorkspaceFolder
       );
     }
