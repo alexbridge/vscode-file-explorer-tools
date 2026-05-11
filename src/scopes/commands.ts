@@ -200,6 +200,9 @@ export function registerScopeCommands(
         'Delete'
       );
       if (confirm === 'Delete') {
+        if (treeProvider.getActiveScopeId() === scope.id) {
+          await vscode.commands.executeCommand('scopesManager.deselectScope');
+        }
         await manager.deleteScope(scope.id);
       }
     })

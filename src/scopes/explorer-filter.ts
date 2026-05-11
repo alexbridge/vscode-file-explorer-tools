@@ -49,7 +49,11 @@ export class ScopeExplorerFilter implements vscode.Disposable {
 
   private async persistManagedPatterns(patterns: string[]): Promise<void> {
     const config = vscode.workspace.getConfiguration(CONFIG_KEY);
-    await config.update(MANAGED_PATTERNS_KEY, patterns, vscode.ConfigurationTarget.Workspace);
+    await config.update(
+      MANAGED_PATTERNS_KEY,
+      patterns.length === 0 ? undefined : patterns,
+      vscode.ConfigurationTarget.Workspace
+    );
   }
 
   private async applyFilter(scope: ScopeDefinition): Promise<void> {
