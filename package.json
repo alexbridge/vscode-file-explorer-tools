@@ -2,7 +2,7 @@
   "name": "file-explorer-tools",
   "displayName": "File Explorer Tools",
   "description": "File Explorer enhancement for VSCode: Scopes Manager, Recursive Expand, Rename cascade",
-  "version": "1.3.1",
+  "version": "1.4.3",
   "publisher": "abridge",
   "author": "alexbridge",
   "repository": {
@@ -225,8 +225,7 @@
       },
       {
         "command": "scopesManager.switchScope",
-        "key": "shift+alt+s",
-        "when": "explorerViewletVisible"
+        "key": "shift+alt+s"
       }
     ],
     "configuration": {

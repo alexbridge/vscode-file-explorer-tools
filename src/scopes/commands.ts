@@ -358,6 +358,9 @@ export function registerScopeCommands(
       } else {
         await vscode.commands.executeCommand('scopesManager.selectScope', picked.scopeId);
       }
+
+      // Always surface the File Explorer so the user sees the new scope applied
+      await vscode.commands.executeCommand('workbench.view.explorer');
     })
   );
 
