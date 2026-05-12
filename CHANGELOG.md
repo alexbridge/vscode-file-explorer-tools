@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.0]
+### Added
+- **Active Scope** - global search is possible (using search.exclude false on ignored folders)
+- **Switch Scope** - jump to File Explorer from any view in VSCode
+
 ## [1.3.0]
 
 ### Added
