@@ -8,6 +8,7 @@ import { ScopeExplorerFilter } from './scopes/explorer-filter';
 import { registerScopeCommands } from './scopes/commands';
 import { registerExpandCommand } from './expand/expand-recursively';
 import { registerRenameCascade } from './rename-cascade/rename-cascade';
+import { registerReverseRenameCascade } from './rename-cascade/reverse-rename';
 
 export function activate(context: vscode.ExtensionContext): void {
   // --- Scopes Manager ---
@@ -56,6 +57,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // --- Rename Cascade ---
   context.subscriptions.push(registerRenameCascade());
+  registerReverseRenameCascade(context);
 
   // --- Register the new MCP installation command ---
   registerInstallMcpCommand(context);
