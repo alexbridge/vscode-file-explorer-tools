@@ -1,8 +1,8 @@
 {
   "name": "file-explorer-tools",
   "displayName": "File Explorer Tools",
-  "description": "File Explorer enhancement for VSCode: Scopes Manager, Recursive Expand, Rename cascade",
-  "version": "1.4.0",
+  "description": "File Explorer enhancement for VSCode: Recursive Expand, Rename cascade",
+  "version": "2.0.0",
   "publisher": "abridge",
   "author": "alexbridge",
   "repository": {
@@ -18,9 +18,6 @@
   "keywords": [
     "vscode",
     "expander",
-    "scopes",
-    "project scopes",
-    "scopes manager",
     "explorer",
     "rename files",
     "rename cascade",
@@ -42,211 +39,33 @@
     "format:check": "prettier --check \"src/**/*.ts\""
   },
   "contributes": {
-    "views": {
-      "explorer": [
-        {
-          "id": "scopesListView",
-          "name": "Scopes",
-          "icon": "$(telescope)"
-        }
-      ]
-    },
-    "viewsWelcome": [
-      {
-        "view": "scopesListView",
-        "contents": "No scopes defined yet.\n[Create Scope](command:scopesManager.createScope)"
-      }
-    ],
     "commands": [
-      {
-        "command": "scopesManager.addToScope",
-        "title": "Add to Scope",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.removeFromScope",
-        "title": "Remove from Scope",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.createScope",
-        "title": "Create Scope",
-        "category": "Scopes Manager",
-        "icon": "$(add)"
-      },
-      {
-        "command": "scopesManager.deleteScope",
-        "title": "Delete Scope",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.renameScope",
-        "title": "Rename Scope",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.clearScope",
-        "title": "Clear Scope Patterns",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.removePatternFromScope",
-        "title": "Remove Pattern",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.selectScope",
-        "title": "Select Scope",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.deselectScope",
-        "title": "Clear Scope Filter",
-        "category": "Scopes Manager",
-        "icon": "$(clear-all)"
-      },
       {
         "command": "fileExplorer.expandRecursively",
         "title": "Expand Recursively",
         "category": "File Explorer",
         "icon": "$(expand-all)"
-      },
-      {
-        "command": "scopesManager.changeStorage",
-        "title": "Change storage (Local/Shared)",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.installMcpServer",
-        "title": "Install scopes MCP",
-        "category": "Scopes Manager"
-      },
-      {
-        "command": "scopesManager.copyScopeName",
-        "title": "Copy Scope Name",
-        "category": "Scopes Manager",
-        "icon": "$(copy)"
-      },
-      {
-        "command": "scopesManager.switchScope",
-        "title": "Switch Scope",
-        "category": "Scopes Manager"
       }
     ],
     "menus": {
       "explorer/context": [
-        {
-          "command": "scopesManager.addToScope",
-          "group": "scopesManager@1"
-        },
-        {
-          "command": "scopesManager.removeFromScope",
-          "group": "scopesManager@2"
-        },
         {
           "command": "fileExplorer.expandRecursively",
           "when": "explorerResourceIsFolder",
           "group": "navigation"
         }
       ],
-      "commandPalette": [
-        {
-          "command": "scopesManager.selectScope",
-          "when": "false"
-        },
-        {
-          "command": "scopesManager.deselectScope",
-          "when": "false"
-        },
-        {
-          "command": "scopesManager.removePatternFromScope",
-          "when": "false"
-        },
-        {
-          "command": "scopesManager.installMcpServer",
-          "category": "Scopes Manager"
-        }
-      ],
       "view/title": [
-        {
-          "command": "scopesManager.createScope",
-          "when": "view == scopesListView",
-          "group": "navigation"
-        },
-        {
-          "command": "scopesManager.deselectScope",
-          "when": "view == scopesListView",
-          "group": "navigation"
-        },
         {
           "command": "fileExplorer.expandRecursively",
           "when": "view == workbench.explorer.fileView",
           "group": "navigation@99"
         }
-      ],
-      "view/item/context": [
-        {
-          "command": "scopesManager.copyScopeName",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "inline"
-        },
-        {
-          "command": "scopesManager.deleteScope",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "scopeActions@1"
-        },
-        {
-          "command": "scopesManager.renameScope",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "scopeActions@2"
-        },
-        {
-          "command": "scopesManager.clearScope",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "scopeActions@3"
-        },
-        {
-          "command": "scopesManager.changeStorage",
-          "when": "view == scopesListView && viewItem == scope",
-          "group": "scopeActions@4"
-        }
       ]
     },
-    "keybindings": [
-      {
-        "command": "scopesManager.addToScope",
-        "key": "alt+s",
-        "when": "explorerViewletVisible && (filesExplorerFocus || editorFocus)"
-      },
-      {
-        "command": "scopesManager.removeFromScope",
-        "key": "alt+d",
-        "when": "explorerViewletVisible && (filesExplorerFocus || editorFocus)"
-      },
-      {
-        "command": "scopesManager.switchScope",
-        "key": "shift+alt+s"
-      }
-    ],
     "configuration": {
       "title": "File Explorer Tools",
       "properties": {
-        "scopesManager.localScopes": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          },
-          "default": [],
-          "description": "Locally stored scopes (not committed to VCS). Managed automatically by the Scopes Manager."
-        },
-        "scopesManager.managedPatterns": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [],
-          "description": "The list of patterns currently managed by the active scope. Managed automatically by the extension."
-        },
         "fileExplorer.renameCascade.mode": {
           "type": "string",
           "enum": [
@@ -291,13 +110,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.41",
-    "@types/picomatch": "^3.0.0",
     "@types/vscode": "^1.85.0",
     "esbuild": "^0.27.4",
     "prettier": "^3.8.1",
     "typescript": "^5.3.0"
-  },
-  "dependencies": {
-    "picomatch": "^4.0.0"
   }
 }

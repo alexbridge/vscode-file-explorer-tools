@@ -21,20 +21,6 @@ async function main() {
     }),
   });
 
-  // Bundle MCP scopes server as a standalone file
-  await esbuild
-    .build({
-      entryPoints: ["tools/mcp-scopes/server.src.js"],
-      bundle: true,
-      outfile: "tools/mcp-scopes/server.js",
-      format: "cjs",
-      platform: "node",
-      target: "es2022",
-      nodePaths: [],
-      ...(production && { minify: true, legalComments: "none" }),
-    })
-    .then(() => console.log("MCP server bundled."));
-
   if (watch) {
     await ctx.watch();
     console.log("Watching for changes...");

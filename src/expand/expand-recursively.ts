@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ScopeExplorerFilter } from '../scopes/explorer-filter';
-import { ScopeManager } from '../scopes/scope-manager';
 
 function getExcludePatterns(): string[] {
   const config = vscode.workspace.getConfiguration('fileExplorer.expandRecursively');
@@ -16,32 +14,6 @@ function shouldExclude(folderName: string, excludePatterns: string[]): boolean {
     }
     return folderName.toLowerCase() === pattern.toLowerCase();
   });
-}
-
-/**
- * Checks if a folder (by relative path) is relevant to any of the scope patterns.
- * A folder is relevant if any scope pattern starts with it or a glob could match inside it.
- */
-function folderIsRelevantToScope(folderRelPath: string, scopePatterns: string[]): boolean {
-  for (const pattern of scopePatterns) {
-    // Direct match or pattern is inside this folder
-    if (pattern.startsWith(folderRelPath + '/') || pattern === folderRelPath) {
-      return true;
-    }
-    // Glob pattern — check if the folder could contain matches
-    const globIdx = pattern.indexOf('*');
-    if (globIdx !== -1) {
-      const base = pattern.slice(0, globIdx);
-      if (
-        folderRelPath.startsWith(base) ||
-        base.startsWith(folderRelPath + '/') ||
-        base === folderRelPath + '/'
-      ) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 /**
@@ -69,12 +41,10 @@ async function getExplorerSelection(): Promise<vscode.Uri | undefined> {
 
 /**
  * Collects all non-excluded folder URIs under a root, sorted by depth (parent first).
- * When scopePatterns is provided, only folders relevant to the scope are included.
  */
 async function collectFolders(
   rootUri: vscode.Uri,
   excludePatterns: string[],
-  scopePatterns: string[] | undefined,
   token: vscode.CancellationToken
 ): Promise<vscode.Uri[]> {
   const result: vscode.Uri[] = [];
@@ -97,20 +67,7 @@ async function collectFolders(
         if (shouldExclude(name, excludePatterns)) {
           continue;
         }
-        const childUri = vscode.Uri.joinPath(current, name);
-        // Check scope relevance if active — patterns are folder-prefixed
-        if (scopePatterns) {
-          const wsFolder = vscode.workspace.getWorkspaceFolder(childUri);
-          if (!wsFolder) {
-            continue;
-          }
-          const localRel = path.relative(wsFolder.uri.fsPath, childUri.fsPath).replace(/\\/g, '/');
-          const prefixedRel = `${wsFolder.name}/${localRel}`;
-          if (!folderIsRelevantToScope(prefixedRel, scopePatterns)) {
-            continue;
-          }
-        }
-        queue.push(childUri);
+        queue.push(vscode.Uri.joinPath(current, name));
       }
     } catch {
       // skip inaccessible folders
@@ -122,7 +79,6 @@ async function collectFolders(
 
 async function expandFolders(
   roots: vscode.Uri[],
-  scopePatterns: string[] | undefined,
   progress: vscode.Progress<{ message?: string; increment?: number }>,
   token: vscode.CancellationToken
 ): Promise<void> {
@@ -146,7 +102,7 @@ async function expandFolders(
       continue;
     }
     progress.report({ message: 'Scanning folders...' });
-    const folders = await collectFolders(root, excludePatterns, scopePatterns, token);
+    const folders = await collectFolders(root, excludePatterns, token);
     allFolders.push(...folders);
   }
 
@@ -180,10 +136,7 @@ async function expandFolders(
   }
 }
 
-export function registerExpandCommand(
-  filter: ScopeExplorerFilter,
-  manager: ScopeManager
-): vscode.Disposable {
+export function registerExpandCommand(): vscode.Disposable {
   return vscode.commands.registerCommand(
     'fileExplorer.expandRecursively',
     async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
@@ -207,25 +160,15 @@ export function registerExpandCommand(
         }
       }
 
-      // Get active scope patterns if a scope is selected
-      let scopePatterns: string[] | undefined;
-      const activeScopeId = filter.getActiveScopeId();
-      if (activeScopeId) {
-        const scope = manager.getScope(activeScopeId);
-        if (scope && scope.patterns.length > 0) {
-          scopePatterns = scope.patterns;
-        }
-      }
-
       await vscode.commands.executeCommand('workbench.files.action.focusFilesExplorer');
 
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: scopePatterns ? 'Expanding scope folders' : 'Expanding folders',
+          title: 'Expanding folders',
           cancellable: true,
         },
-        (progress, token) => expandFolders(foldersToExpand, scopePatterns, progress, token)
+        (progress, token) => expandFolders(foldersToExpand, progress, token)
       );
     }
   );

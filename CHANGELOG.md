@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0]
+### Removed
+- **Scopes Manager** - extracted into a dedicated extension: [Scopes Manager](https://open-vsx.org/extension/abridge/scopes-manager). Existing scopes carry over — same storage (`.vscode/scopes.json`, `scopesManager.localScopes`). See README migration section.
+
 ## [1.4.0]
 ### Added
 - **Active Scope** - global search is possible (using search.exclude false on ignored folders)

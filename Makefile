@@ -9,7 +9,6 @@ OPEN_VSX_TOKEN := $(shell grep OPEN_VSX_TOKEN ~/.config/env | cut -d '=' -f 2)
 
 init:
 	npm install
-	cd tools/mcp-scopes && npm install
 
 build:
 	npm run build:production
@@ -33,6 +32,3 @@ publish: pack
 
 clean:
 	rm -rf dist *.vsix
-
-tools-api-mcp-inspector:
-	@npx @modelcontextprotocol/inspector node ./tools/mcp-scopes/server.js
